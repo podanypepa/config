@@ -1,6 +1,6 @@
 # ghostty config
 
-Copy this file to ~/.config/ghostty/config
+Copy `config` file to `~/.config/ghostty/config`
 
 [config](./config)
 
