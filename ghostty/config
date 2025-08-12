@@ -1,0 +1,80 @@
+# ghostty config
+# ghostty +show-config --default --docs | nvim
+
+font-size = 15.1
+# font-size = 15.3
+# font-size = 15.6
+font-thicken = true
+
+# ghostty +list-themes
+# theme = GitHub Dark
+# theme = GitHub-Dark-High-Contrast
+# theme = GitHub-Dark-Colorblind
+# theme = GitHub-Dark-Default
+# theme = GitHub-Light-High-Contrast
+# theme = Gitlab-Light
+#
+# theme = NvimDark
+# theme = NvimLight
+# theme = light:NvimLight,dark:NvimDark
+#
+# theme = Tomorrow
+# theme = Tomorrow Night
+# theme = Tomorrow Night Bright
+#
+# theme = UltraDark
+#
+# theme = Black Metal (Immortal)
+theme = Black Metal (Mayhem)
+#
+# theme = Batman
+
+# background-opacity = 1
+
+window-padding-x = 10
+window-padding-y = 10
+
+font-family = "SauceCodePro Nerd Font"
+font-family-bold = "SauceCodePro Nerd Font"
+font-family-italic = "SauceCodePro Nerd Font"
+font-family-bold-italic = "SauceCodePro Nerd Font"
+
+font-feature = -calt, -liga, -dlig
+
+window-title-font-family = "SauceCodePro Nerd Font"
+
+keybind = global:cmd+grave_accent=toggle_quick_terminal
+keybind = shift+left=previous_tab
+keybind = shift+right=next_tab
+keybind = alt+left=goto_split:previous
+keybind = alt+right=goto_split:next
+keybind = alt+left=goto_split:previous
+keybind = alt+right=goto_split:next
+keybind = alt+up=goto_split:previous
+keybind = alt+down=goto_split:next
+keybind = cmd+f=toggle_fullscreen
+
+# https://ghostty.org/docs/config/reference#macos-non-native-fullscreen
+macos-non-native-fullscreen = true
+shell-integration = zsh
+
+auto-update = check
+window-save-state = always
+focus-follows-mouse = true
+#
+# split-separator-color = red
+auto-update-channel = tip
+# window-decoration = false
+# macos-titlebar-style = hidden
+#
+# https://www.ditig.com/publications/256-colors-cheat-sheet
+split-divider-color = #444444
+
+window-new-tab-position = current
+
+cursor-style = block
+cursor-style-blink = false
+shell-integration-features = no-cursor
+
+# custom-shader = ./shaders/cursot_smear.glsl
+# custom-shader = ./shaders/seascape.glsl
