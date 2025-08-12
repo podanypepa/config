@@ -1,0 +1,51 @@
+format = """
+$hostname\
+$directory\
+$golang\
+$python\
+$git_branch\
+$git_commit\
+$git_state\
+$git_status\
+$git_metrics\
+$nodejs\
+$line_break\
+$character"""
+add_newline = true
+
+command_timeout = 3600000
+# ignore_timeout = true
+
+[character]
+success_symbol = '[❯](bold green)'
+error_symbol = '[❯](bold red)'
+
+[package]
+disabled = false
+
+[username]
+show_always = true
+style_user = "bg:#9A348E"
+style_root = "bg:#9A348E"
+format = '[$user ]($style)'
+
+[directory]
+truncation_length = 0
+truncate_to_repo = false
+style = "bold blue"
+
+[cmd_duration]
+min_time = 5
+show_milliseconds = true
+
+[golang]
+symbol = ""
+format = '[$symbol ($version) ]($style)'
+
+[git_branch]
+format = " [$symbol$branch]($style) "
+style = "bold yellow"
+
+[python]
+# symbol = '👾 '
+pyenv_version_name = true
