@@ -44,8 +44,8 @@ font-feature = -calt, -liga, -dlig
 window-title-font-family = "SauceCodePro Nerd Font"
 
 keybind = global:cmd+grave_accent=toggle_quick_terminal
-keybind = shift+left=previous_tab
-keybind = shift+right=next_tab
+# keybind = shift+left=previous_tab
+# keybind = shift+right=next_tab
 keybind = alt+left=goto_split:previous
 keybind = alt+right=goto_split:next
 keybind = alt+left=goto_split:previous
