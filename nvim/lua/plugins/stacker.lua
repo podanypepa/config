@@ -1,6 +1,7 @@
 return {
 	"tripplyons/stacker.nvim",
 	event = "BufEnter",
+	enabled = false,
 	config = function()
 		local stacker = require("stacker")
 		local opts = {}
