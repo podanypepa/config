@@ -78,3 +78,5 @@ shell-integration-features = no-cursor
 
 # custom-shader = ./shaders/cursot_smear.glsl
 # custom-shader = ./shaders/seascape.glsl
+
+confirm-close-surface = false
