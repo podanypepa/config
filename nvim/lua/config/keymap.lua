@@ -75,3 +75,13 @@ vim.keymap.set("n", "<leader>st", function()
 	vim.cmd.startinsert()
 	vim.api.nvim_win_set_height(0, 10)
 end)
+vim.keymap.set("n", "<leader>vt", function()
+	local total_width = vim.o.columns
+	local new_width = math.floor(total_width / 3)
+
+	vim.cmd.new()
+	vim.cmd.term()
+	vim.cmd.wincmd("L")
+	vim.cmd.startinsert()
+	vim.api.nvim_win_set_width(0, new_width)
+end)
