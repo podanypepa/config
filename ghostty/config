@@ -80,3 +80,5 @@ shell-integration-features = no-cursor
 # custom-shader = ./shaders/seascape.glsl
 
 confirm-close-surface = false
+
+config-file = "?~/.config/ghostty/mac16.toml"
