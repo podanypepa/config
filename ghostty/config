@@ -1,7 +1,7 @@
 # ghostty config
 # ghostty +show-config --default --docs | nvim
 
-font-size = 15.1
+font-size = 15.2
 # font-size = 15.3
 # font-size = 15.6
 font-thicken = true
@@ -25,9 +25,12 @@ font-thicken = true
 # theme = UltraDark
 #
 # theme = Black Metal (Immortal)
-theme = Black Metal (Mayhem)
-#
+# theme = Black Metal (Mayhem)
+# theme = Adventure
 # theme = Batman
+# theme = Atom
+# theme = Ayu
+theme = Builtin Pastel Dark
 
 # background-opacity = 1
 
@@ -64,7 +67,7 @@ focus-follows-mouse = true
 #
 # split-separator-color = red
 auto-update-channel = tip
-# window-decoration = false
+window-decoration = false
 # macos-titlebar-style = hidden
 #
 # https://www.ditig.com/publications/256-colors-cheat-sheet
