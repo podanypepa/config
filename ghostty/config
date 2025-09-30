@@ -46,15 +46,15 @@ font-feature = -calt, -liga, -dlig
 
 window-title-font-family = "SauceCodePro Nerd Font"
 
-keybind = global:cmd+grave_accent=toggle_quick_terminal
+# keybind = global:cmd+grave_accent=toggle_quick_terminal
 # keybind = shift+left=previous_tab
 # keybind = shift+right=next_tab
-keybind = alt+left=goto_split:previous
-keybind = alt+right=goto_split:next
-keybind = alt+left=goto_split:previous
-keybind = alt+right=goto_split:next
-keybind = alt+up=goto_split:previous
-keybind = alt+down=goto_split:next
+# keybind = alt+left=goto_split:previous
+# keybind = alt+right=goto_split:next
+# keybind = alt+left=goto_split:previous
+# keybind = alt+right=goto_split:next
+# keybind = alt+up=goto_split:previous
+# keybind = alt+down=goto_split:next
 keybind = cmd+f=toggle_fullscreen
 
 # https://ghostty.org/docs/config/reference#macos-non-native-fullscreen
@@ -78,9 +78,6 @@ window-new-tab-position = current
 cursor-style = block
 cursor-style-blink = false
 shell-integration-features = no-cursor
-
-# custom-shader = ./shaders/cursot_smear.glsl
-# custom-shader = ./shaders/seascape.glsl
 
 confirm-close-surface = false
 
