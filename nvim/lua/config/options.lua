@@ -51,3 +51,5 @@ vim.opt.guicursor = {
 	"i:block-blinkon100-blinkoff100-blinkwait50",
 	"r:hor20",
 }
+
+-- vim.opt.guicursor = "n-v-c:block,i:ver25"
