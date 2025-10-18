@@ -19,7 +19,12 @@ return {
 					position = "right",
 					width = 40,
 				},
-				default_component_configs = {},
+				default_component_configs = {
+					indent = {
+						with_markers = false,
+						indent_marker = "",
+					},
+				},
 				sources = {
 					"filesystem",
 					"buffers",
