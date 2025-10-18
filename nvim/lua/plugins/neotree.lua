@@ -10,6 +10,7 @@ return {
 		lazy = false, -- neo-tree will lazily load itself
 		config = function()
 			require("neo-tree").setup({
+				close_if_last_window = true,
 				popup_border_style = "NC", -- or "" to use 'winborder' on Neovim v0.11+
 				enable_git_status = true,
 				enable_diagnostics = true,
