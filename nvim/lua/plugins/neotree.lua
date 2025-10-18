@@ -20,6 +20,19 @@ return {
 					width = 40,
 				},
 				default_component_configs = {},
+				sources = {
+					"filesystem",
+					"buffers",
+					"git_status",
+				},
+			})
+			vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "FocusGained" }, {
+				callback = function()
+					local ok, manager = pcall(require, "neo-tree.sources.manager")
+					if ok then
+						manager.refresh("git_status")
+					end
+				end,
 			})
 		end,
 	},
