@@ -17,7 +17,7 @@ return {
 				open_files_do_not_replace_types = { "terminal", "trouble", "qf" },
 				window = {
 					position = "right",
-					width = 40,
+					width = 45,
 				},
 				default_component_configs = {
 					indent = {
