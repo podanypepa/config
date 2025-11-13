@@ -80,5 +80,6 @@ cursor-style-blink = false
 shell-integration-features = no-cursor
 
 confirm-close-surface = false
+scrollbar = never
 
 config-file = "?~/.config/ghostty/mac16.toml"
