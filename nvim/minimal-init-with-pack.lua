@@ -34,14 +34,10 @@ vim.packadd({
 	{
 		"https://github.com/MeanderingProgrammer/render-markdown.nvim",
 	},
-	{
-		src = "https://github.com/code-biscuits/nvim-biscuits",
-	},
 })
 
 require("mason").setup()
 require("render-markdown").setup({})
-require("nvim-biscuits").setup({})
 
 vim.lsp.enable({ "lua_ls", "svelte-language-server" })
 vim.lsp.config.lua_ls.setup({
