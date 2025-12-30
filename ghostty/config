@@ -32,7 +32,8 @@ font-thicken = true
 # theme = Ayu
 theme = Builtin Pastel Dark
 
-# background-opacity = 1
+background-opacity = 1
+# background-opacity = 0.8
 
 window-padding-x = 10
 window-padding-y = 10
@@ -58,7 +59,7 @@ window-title-font-family = "SauceCodePro Nerd Font"
 # keybind = cmd+f=toggle_fullscreen
 
 # https://ghostty.org/docs/config/reference#macos-non-native-fullscreen
-macos-non-native-fullscreen = true
+# macos-non-native-fullscreen = true
 shell-integration = zsh
 
 auto-update = check
