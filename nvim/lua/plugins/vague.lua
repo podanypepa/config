@@ -1,6 +1,6 @@
 return {
 	"vague2k/vague.nvim",
-	enabled = true,
+	enabled = false,
 	config = function()
 		require("vague").setup({
 			transparent = true,
