@@ -1,4 +1,3 @@
--- vim.api.nvim_set_hl(0, "Comment", { fg = "#9b9fa3" })
 vim.opt.background = "dark"
 vim.cmd("colorscheme vague")
 
@@ -6,6 +5,8 @@ vim.cmd("colorscheme vague")
 -- vim.o.background = "dark"
 
 -- vim.cmd("colorscheme default")
+-- vim.api.nvim_set_hl(0, "Comment", { fg = "#9b9fa3" })
+
 vim.api.nvim_set_hl(0, "Normal", { bg = nil })
 vim.api.nvim_set_hl(0, "CursorLine", { bg = nil })
 vim.api.nvim_set_hl(0, "CursorLineNr", { bg = nil, fg = "white" })
