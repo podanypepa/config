@@ -68,7 +68,7 @@ focus-follows-mouse = true
 #
 # split-separator-color = red
 auto-update-channel = tip
-window-decoration = false
+# window-decoration = false
 # macos-titlebar-style = hidden
 #
 # https://www.ditig.com/publications/256-colors-cheat-sheet
