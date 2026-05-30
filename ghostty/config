@@ -30,9 +30,15 @@ font-thicken = true
 # theme = Batman
 # theme = Atom
 # theme = Ayu
+
+# THIS IS MY FAVORITE
 theme = Builtin Pastel Dark
 
-background-opacity = 1
+# light themes
+# theme = Adwaita
+# theme = Apple System Colors Light
+
+# background-opacity = 1
 # background-opacity = 0.8
 
 window-padding-x = 10
