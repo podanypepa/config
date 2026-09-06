@@ -10,7 +10,6 @@ vim.g.netrw_fastbrowse = 0
 vim.opt.relativenumber = true
 vim.opt.nu = true
 vim.opt.hidden = true
-vim.opt.clipboard = "unnamedplus"
 vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
 vim.opt.shiftwidth = 4
@@ -30,11 +29,10 @@ vim.opt.backspace = "indent,eol,start"
 vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.writebackup = false
-vim.opt.autowrite = true
 vim.opt.splitright = true
 vim.opt.showmode = false
 vim.opt.cmdheight = 1
-vim.opt.updatetime = 50
+vim.opt.updatetime = 200
 vim.opt.confirm = true
 vim.opt.autoread = true
 vim.opt.autowrite = false
@@ -42,7 +40,6 @@ vim.opt.incsearch = true
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.winborder = "rounded"
-vim.opt.lazyredraw = true
 
 vim.opt.guicursor = {
 	"n-v-c:block",
@@ -70,16 +67,9 @@ vim.pack.add({
 	gh("sindrets/diffview.nvim"),
 	gh("ibhagwan/fzf-lua"),
 	gh("NeogitOrg/neogit"),
-	gh("hrsh7th/nvim-cmp"),
-	gh("hrsh7th/cmp-nvim-lsp"),
-	gh("hrsh7th/cmp-buffer"),
-	gh("hrsh7th/cmp-path"),
-	gh("hrsh7th/cmp-cmdline"),
 	gh("onsails/lspkind.nvim"),
-	gh("L3MON4D3/LuaSnip"),
 	gh("skywind3000/asyncrun.vim"),
 	gh("zbirenbaum/copilot.lua"),
-	gh("zbirenbaum/copilot-cmp"),
 	gh("mhartington/formatter.nvim"),
 	gh("windwp/nvim-autopairs"),
 	gh("lewis6991/gitsigns.nvim"),
@@ -93,22 +83,100 @@ vim.pack.add({
 	gh("mason-org/mason-lspconfig.nvim"),
 })
 
-require("mason").setup()
-require("mason-lspconfig").setup({
-	ensure_installed = { "gopls", "pyright", "lua_ls" },
+-- Tyhle se pri startu ani nepridavaji do 'runtimepath'. Jejich plugin/ a
+-- after/plugin/ soubory by jinak natahly cely nvim-cmp a LuaSnip (~30 ms).
+-- Nahazuji se pres :packadd az v lazy bloku nize.
+local completion_plugins = {
+	"nvim-cmp",
+	"cmp-nvim-lsp",
+	"cmp-buffer",
+	"cmp-path",
+	"copilot-cmp",
+	"LuaSnip",
+}
+
+vim.pack.add({
+	gh("hrsh7th/nvim-cmp"),
+	gh("hrsh7th/cmp-nvim-lsp"),
+	gh("hrsh7th/cmp-buffer"),
+	gh("hrsh7th/cmp-path"),
+	gh("L3MON4D3/LuaSnip"),
+	gh("zbirenbaum/copilot-cmp"),
+}, { load = function() end })
+
+-- ── lazy loading ──────────────────────────────────────────────────────────
+-- Fronta setupu, ktere nemusi bezet pred prvnim vykreslenim obrazovky.
+-- Kazdy krok jede v samostatnem timeru, takze UI mezi nimi dycha.
+local lazy_queue = {}
+local function lazy(fn)
+	lazy_queue[#lazy_queue + 1] = fn
+end
+
+vim.api.nvim_create_autocmd("VimEnter", {
+	once = true,
+	callback = function()
+		local i = 0
+		local function step()
+			i = i + 1
+			local fn = lazy_queue[i]
+			if not fn then
+				return
+			end
+			local ok, err = pcall(fn)
+			if not ok then
+				vim.notify("lazy setup #" .. i .. ": " .. tostring(err), vim.log.levels.ERROR)
+			end
+			vim.defer_fn(step, 1)
+		end
+		vim.defer_fn(step, 1)
+	end,
 })
 
--- parsers (Go)
-vim.opt.runtimepath:append(vim.fn.stdpath("data") .. "/treesitter")
-
-local parser_dir = vim.fn.stdpath("data") .. "/treesitter/parser/"
-for _, lang in ipairs({ "go", "gomod", "gowork", "gosum" }) do
-	vim.treesitter.language.add(lang, { path = parser_dir .. lang .. ".so" })
+-- Setup, ktery se ma spustit pri prvnim pouziti (a nejpozdeji z lazy fronty).
+local function on_demand(fn)
+	local done = false
+	local function ensure()
+		if done then
+			return
+		end
+		done = true
+		fn()
+	end
+	lazy(ensure)
+	return ensure
 end
--- query files pro Go (highlights.scm atd.) jsou v nvim-treesitter
-vim.opt.runtimepath:append(vim.fn.stdpath("data") .. "/site/pack/core/opt/nvim-treesitter")
 
+-- ── mason ─────────────────────────────────────────────────────────────────
+-- Z mason.setup() je pri startu potreba jedina vec: mason/bin v PATH.
+-- Registry, :Mason a ensure_installed az po startu.
+vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
+
+lazy(function()
+	require("mason").setup()
+	require("mason-lspconfig").setup({
+		ensure_installed = { "gopls", "pyright", "lua_ls" },
+	})
+end)
+
+-- parsers (Go) - runtimepath i parsery se registruji az pri prvnim pouziti
 local ts_langs = { go = "go", gomod = "gomod", gowork = "gowork", gosum = "gosum", python = "python" }
+
+local ts_ready = false
+local function ts_setup()
+	if ts_ready then
+		return
+	end
+	ts_ready = true
+	local data = vim.fn.stdpath("data")
+	vim.opt.runtimepath:append(data .. "/treesitter")
+	-- query files pro Go (highlights.scm atd.) jsou v nvim-treesitter
+	vim.cmd.packadd("nvim-treesitter")
+	local parser_dir = data .. "/treesitter/parser/"
+	for _, lang in ipairs({ "go", "gomod", "gowork", "gosum" }) do
+		vim.treesitter.language.add(lang, { path = parser_dir .. lang .. ".so" })
+	end
+end
+
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = vim.tbl_keys(ts_langs),
 	callback = function(ev)
@@ -116,45 +184,57 @@ vim.api.nvim_create_autocmd("FileType", {
 		if ok and stats and stats.size > 100 * 1024 then
 			return
 		end
+		ts_setup()
 		vim.treesitter.start(ev.buf, ts_langs[vim.bo[ev.buf].filetype])
 	end,
 })
 
-require("oil").setup({
-	confirm = false,
-	skip_confirm_for_simple_edits = true,
-	prompt_save_on_select_new_entry = false,
-	default_file_explorer = true,
-	float = {
-		preview_split = "left",
-	},
-	columns = {
-		"icon",
-	},
-	cleanup_delay_ms = 2000,
-	watch_for_changes = true,
-	view_options = {
-		show_hidden = true,
-		is_always_hidden = function(name, _)
-			local folder_skip = { "dev-tools.locks", "dune.lock", "_build", ".git", ".DS_Store" }
-			return vim.tbl_contains(folder_skip, name)
-		end,
-		natural_order = "fast",
-		case_insensitive = false,
-		sort = {
-			{ "type", "asc" },
-			{ "name", "asc" },
+local oil_setup = on_demand(function()
+	require("oil").setup({
+		confirm = false,
+		skip_confirm_for_simple_edits = true,
+		prompt_save_on_select_new_entry = false,
+		default_file_explorer = true,
+		float = {
+			preview_split = "left",
 		},
-	},
-	preview_win = {
-		preview_split = "above",
-		update_on_cursor_moved = true,
-		preview_method = "fast_scratch",
-		win_options = {},
-	},
-})
+		columns = {
+			"icon",
+		},
+		cleanup_delay_ms = 2000,
+		watch_for_changes = true,
+		view_options = {
+			show_hidden = true,
+			is_always_hidden = function(name, _)
+				local folder_skip = { "dev-tools.locks", "dune.lock", "_build", ".git", ".DS_Store" }
+				return vim.tbl_contains(folder_skip, name)
+			end,
+			natural_order = "fast",
+			case_insensitive = false,
+			sort = {
+				{ "type", "asc" },
+				{ "name", "asc" },
+			},
+		},
+		preview_win = {
+			preview_split = "above",
+			update_on_cursor_moved = true,
+			preview_method = "fast_scratch",
+			win_options = {},
+		},
+	})
+end)
 
-vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+-- `nvim .` / `nvim <dir>` potrebuje oil hned (hijack netrw)
+local first_arg = vim.fn.argv(0)
+if type(first_arg) == "string" and first_arg ~= "" and vim.fn.isdirectory(first_arg) == 1 then
+	oil_setup()
+end
+
+vim.keymap.set("n", "-", function()
+	oil_setup()
+	vim.cmd("Oil")
+end, { desc = "Open parent directory" })
 
 require("vague").setup({
 	transparent = true,
@@ -213,7 +293,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 vim.diagnostic.config({
 	virtual_lines = true,
 	signs = true,
-	update_in_insert = true,
+	update_in_insert = false,
 	float = {
 		header = false,
 		border = "single",
@@ -225,206 +305,228 @@ vim.diagnostic.config({
 	severity_sort = true,
 })
 
-require("nvim-autopairs").setup()
+lazy(function()
+	require("nvim-autopairs").setup()
+end)
 
-require("gitsigns").setup({
-	signs = {
-		add = { text = "┃" },
-		change = { text = "┃" },
-		delete = { text = "_" },
-		topdelete = { text = "‾" },
-		changedelete = { text = "~" },
-		untracked = { text = "┆" },
-	},
-	signcolumn = true,
-	numhl = true,
-	linehl = false,
-	word_diff = false,
-	watch_gitdir = { follow_files = true },
-	auto_attach = true,
-	attach_to_untracked = true,
-	current_line_blame_formatter = "<summary>",
-	sign_priority = 6,
-	update_debounce = 100,
-	max_file_length = 40000,
-	preview_config = {
-		border = "single",
-		style = "minimal",
-		relative = "cursor",
-		row = 0,
-		col = 1,
-	},
-})
-
-
-require("fzf-lua").setup({
-	fzf_colors = true,
-	files = {
-		cmd = "fd --type f --hidden --no-ignore --exclude .git",
-	},
-	file_icon_padding = " ",
-	previewers = {
-		builtin = {
-			syntax_limit_b = -102400,
+lazy(function()
+	require("gitsigns").setup({
+		signs = {
+			add = { text = "┃" },
+			change = { text = "┃" },
+			delete = { text = "_" },
+			topdelete = { text = "‾" },
+			changedelete = { text = "~" },
+			untracked = { text = "┆" },
 		},
-	},
-	winopts = {
-		preview = {
-			layout = "vertical",
-			title = true,
-			title_pos = "left",
+		signcolumn = true,
+		numhl = true,
+		linehl = false,
+		word_diff = false,
+		watch_gitdir = { follow_files = true },
+		auto_attach = true,
+		attach_to_untracked = true,
+		current_line_blame_formatter = "<summary>",
+		sign_priority = 6,
+		update_debounce = 100,
+		max_file_length = 40000,
+		preview_config = {
+			border = "single",
+			style = "minimal",
+			relative = "cursor",
+			row = 0,
+			col = 1,
 		},
-	},
-})
+	})
+end)
 
-require("neogit").setup({
-	commit_view = {
-		kind = "split",
-		verify_commit = vim.fn.executable("gpg") == 1,
-	},
-	highlight = {
-		italic = true,
-		bold = true,
-		underline = true,
-	},
-	auto_refresh = true,
-	sort_branches = "-committerdate",
-	disable_line_numbers = true,
-	auto_show_console = true,
-	auto_close_console = true,
-})
-
-require("copilot").setup({
-	suggestion = { enabled = false },
-	panel = { enabled = false },
-})
-require("copilot_cmp").setup()
-
-local cmp = require("cmp")
-local cmp_select_opts = { behavior = cmp.SelectBehavior.Select }
-local lspkind = require("lspkind")
-
-cmp.setup({
-	enabled = true,
-	snippet = {
-		expand = function(args)
-			require("luasnip").lsp_expand(args.body)
-		end,
-	},
-	mapping = {
-		["<C-y>"] = cmp.mapping.confirm({ select = true }),
-		["<C-e>"] = cmp.mapping.abort(),
-		["<C-u>"] = cmp.mapping.scroll_docs(-4),
-		["<C-d>"] = cmp.mapping.scroll_docs(4),
-		["<Up>"] = cmp.mapping.select_prev_item(cmp_select_opts),
-		["<Down>"] = cmp.mapping.select_next_item(cmp_select_opts),
-		["<CR>"] = cmp.mapping.confirm({ select = true }),
-		["<C-p>"] = cmp.mapping(function()
-			if cmp.visible() then
-				cmp.select_prev_item(cmp_select_opts)
-			else
-				cmp.complete()
-			end
-		end),
-		["<C-n>"] = cmp.mapping(function()
-			if cmp.visible() then
-				cmp.select_next_item(cmp_select_opts)
-			else
-				cmp.complete()
-			end
-		end),
-	},
-	window = {
-		completion = cmp.config.window.bordered(),
-		documentation = cmp.config.window.bordered(),
-	},
-	sources = cmp.config.sources({
-		{ name = "copilot" },
-		{ name = "nvim_lsp" },
-		{ name = "luasnip" },
-		{ name = "path" },
-	}, {
-		{ name = "buffer" },
-	}),
-	formatting = {
-		format = lspkind.cmp_format({
-			maxwidth = 50,
-			ellipsis_char = "...",
-		}),
-	},
-})
-
-local util = require("formatter.util")
-require("formatter").setup({
-	logging = true,
-	log_level = vim.log.levels.WARN,
-	filetype = {
-		go = {
-			require("formatter.filetypes.go").gofumpt,
+local fzf_setup = on_demand(function()
+	require("fzf-lua").setup({
+		fzf_colors = true,
+		files = {
+			cmd = "fd --type f --hidden --no-ignore --exclude .git",
 		},
-		rust = {
-			require("formatter.filetypes.rust").rustfmt,
+		file_icon_padding = " ",
+		previewers = {
+			builtin = {
+				syntax_limit_b = -102400,
+			},
 		},
-		json = {
-			function()
-				return {
-					exe = "jq",
-					args = { "--indent 4", "." },
-					stdin = true,
-				}
+		winopts = {
+			preview = {
+				layout = "vertical",
+				title = true,
+				title_pos = "left",
+			},
+		},
+	})
+end)
+
+lazy(function()
+	require("neogit").setup({
+		commit_view = {
+			kind = "split",
+			verify_commit = vim.fn.executable("gpg") == 1,
+		},
+		highlight = {
+			italic = true,
+			bold = true,
+			underline = true,
+		},
+		auto_refresh = true,
+		sort_branches = "-committerdate",
+		disable_line_numbers = true,
+		auto_show_console = true,
+		auto_close_console = true,
+	})
+end)
+
+
+-- cmp + copilot: dohromady ~120-200 ms, nic z toho neni potreba
+-- pred prvnim vykreslenim. Poradi: cmp -> copilot -> copilot_cmp.
+lazy(function()
+	-- :packadd sourcuje jen plugin/, ne after/plugin/ - a prave tam si
+	-- cmp-nvim-lsp/buffer/path registruji svoje zdroje.
+	local pack_dir = vim.fn.stdpath("data") .. "/site/pack/core/opt/"
+	for _, name in ipairs(completion_plugins) do
+		vim.cmd.packadd(name)
+		for _, f in ipairs(vim.fn.glob(pack_dir .. name .. "/after/plugin/**/*.{vim,lua}", false, true)) do
+			vim.cmd.source(f)
+		end
+	end
+
+	local cmp = require("cmp")
+	local cmp_select_opts = { behavior = cmp.SelectBehavior.Select }
+	local lspkind = require("lspkind")
+
+	cmp.setup({
+		enabled = true,
+		snippet = {
+			expand = function(args)
+				require("luasnip").lsp_expand(args.body)
 			end,
 		},
-		javascript = {
-			require("formatter.filetypes.javascript").prettier,
-		},
-		svelte = {
-			require("formatter.filetypes.javascript").prettier,
-		},
-		typescript = {
-			require("formatter.filetypes.typescript").prettier,
-		},
-		html = {
-			require("formatter.filetypes.html").prettier,
-		},
-		css = {
-			require("formatter.filetypes.css").prettier,
-		},
-		zig = {
-			function()
-				return {
-					exe = "zig",
-					args = { "fmt", "." },
-					stdin = true,
-				}
-			end,
-		},
-		python = {
-			require("formatter.filetypes.python").black,
-		},
-		lua = {
-			require("formatter.filetypes.lua").stylua,
-			function()
-				if util.get_current_buffer_file_name() == "special.lua" then
-					return nil
+		mapping = {
+			["<C-y>"] = cmp.mapping.confirm({ select = true }),
+			["<C-e>"] = cmp.mapping.abort(),
+			["<C-u>"] = cmp.mapping.scroll_docs(-4),
+			["<C-d>"] = cmp.mapping.scroll_docs(4),
+			["<Up>"] = cmp.mapping.select_prev_item(cmp_select_opts),
+			["<Down>"] = cmp.mapping.select_next_item(cmp_select_opts),
+			["<CR>"] = cmp.mapping.confirm({ select = true }),
+			["<C-p>"] = cmp.mapping(function()
+				if cmp.visible() then
+					cmp.select_prev_item(cmp_select_opts)
+				else
+					cmp.complete()
 				end
-				return {
-					exe = "stylua",
-					args = {
-						"--search-parent-directories",
-						"--stdin-filepath",
-						util.escape_path(util.get_current_buffer_file_path()),
-						"--",
-						"-",
-					},
-					stdin = true,
-				}
-			end,
+			end),
+			["<C-n>"] = cmp.mapping(function()
+				if cmp.visible() then
+					cmp.select_next_item(cmp_select_opts)
+				else
+					cmp.complete()
+				end
+			end),
 		},
-		["*"] = {
-			require("formatter.filetypes.any").remove_trailing_whitespace,
+		window = {
+			completion = cmp.config.window.bordered(),
+			documentation = cmp.config.window.bordered(),
 		},
-	},
-})
+		sources = cmp.config.sources({
+			{ name = "copilot" },
+			{ name = "nvim_lsp" },
+			{ name = "path" },
+		}, {
+			{ name = "buffer" },
+		}),
+		formatting = {
+			format = lspkind.cmp_format({
+				maxwidth = 50,
+				ellipsis_char = "...",
+			}),
+		},
+	})
+	require("copilot").setup({
+		suggestion = { enabled = false },
+		panel = { enabled = false },
+	})
+	require("copilot_cmp").setup()
+end)
+
+lazy(function()
+	local util = require("formatter.util")
+	require("formatter").setup({
+		logging = true,
+		log_level = vim.log.levels.WARN,
+		filetype = {
+			go = {
+				require("formatter.filetypes.go").gofumpt,
+			},
+			rust = {
+				require("formatter.filetypes.rust").rustfmt,
+			},
+			json = {
+				function()
+					return {
+						exe = "jq",
+						args = { "--indent 4", "." },
+						stdin = true,
+					}
+				end,
+			},
+			javascript = {
+				require("formatter.filetypes.javascript").prettier,
+			},
+			svelte = {
+				require("formatter.filetypes.javascript").prettier,
+			},
+			typescript = {
+				require("formatter.filetypes.typescript").prettier,
+			},
+			html = {
+				require("formatter.filetypes.html").prettier,
+			},
+			css = {
+				require("formatter.filetypes.css").prettier,
+			},
+			zig = {
+				function()
+					return {
+						exe = "zig",
+						args = { "fmt", "." },
+						stdin = true,
+					}
+				end,
+			},
+			python = {
+				require("formatter.filetypes.python").black,
+			},
+			lua = {
+				require("formatter.filetypes.lua").stylua,
+				function()
+					if util.get_current_buffer_file_name() == "special.lua" then
+						return nil
+					end
+					return {
+						exe = "stylua",
+						args = {
+							"--search-parent-directories",
+							"--stdin-filepath",
+							util.escape_path(util.get_current_buffer_file_path()),
+							"--",
+							"-",
+						},
+						stdin = true,
+					}
+				end,
+			},
+			["*"] = {
+				require("formatter.filetypes.any").remove_trailing_whitespace,
+			},
+		},
+	})
+end)
 
 vim.api.nvim_create_augroup("__formatter__", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePost", {
@@ -576,9 +678,10 @@ vim.keymap.set("v", "p", '"_dP')
 vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
 -- Clipboard
-vim.keymap.set("n", "<leader>y", '"+y')
-vim.keymap.set("v", "<leader>y", '"+y')
-vim.keymap.set("n", "<leader>Y", '"+Y')
+vim.keymap.set({ "n", "v" }, "<leader>y", '"+y', { desc = "Yank to system clipboard" })
+vim.keymap.set("n", "<leader>Y", '"+Y', { desc = "Yank line to system clipboard" })
+vim.keymap.set({ "n", "v" }, "<leader>p", '"+p', { desc = "Paste from system clipboard" })
+vim.keymap.set({ "n", "v" }, "<leader>D", '"_d', { desc = "Delete without clobbering registers" })
 vim.keymap.set("n", "<leader>cp", '<cmd>let @+ = expand("%:p")<CR>', { desc = "Copy file path" })
 
 -- Search
@@ -617,13 +720,34 @@ vim.keymap.set("n", "<leader>so", "<cmd>source %<CR>")
 vim.keymap.set("n", "<leader>ne", ":Neogit<CR>", { desc = "Neogit" })
 
 -- FzfLua
-vim.keymap.set("n", "<leader><space>", ":FzfLua files<CR>", { desc = "Files" })
-vim.keymap.set("n", "<leader><Tab>", ":FzfLua buffers<CR>", { desc = "Buffers" })
-vim.keymap.set("n", "<leader>fu", ":FzfLua grep_cword<CR>", { desc = "Grep word" })
-vim.keymap.set("n", "<leader>fw", ":FzfLua grep<CR>", { desc = "Grep" })
-vim.keymap.set("n", "<leader>fm", ":FzfLua marks<CR>", { desc = "Marks" })
-vim.keymap.set("n", "<leader>td", ":FzfLua diagnostics_workspace<CR>", { desc = "Diagnostics" })
-vim.keymap.set("n", "R", ":FzfLua lsp_references<CR>", { desc = "LSP references" })
+vim.keymap.set("n", "<leader><space>", function()
+	fzf_setup()
+	vim.cmd("FzfLua files")
+end, { desc = "Files" })
+vim.keymap.set("n", "<leader><Tab>", function()
+	fzf_setup()
+	vim.cmd("FzfLua buffers")
+end, { desc = "Buffers" })
+vim.keymap.set("n", "<leader>fu", function()
+	fzf_setup()
+	vim.cmd("FzfLua grep_cword")
+end, { desc = "Grep word" })
+vim.keymap.set("n", "<leader>fw", function()
+	fzf_setup()
+	vim.cmd("FzfLua grep")
+end, { desc = "Grep" })
+vim.keymap.set("n", "<leader>fm", function()
+	fzf_setup()
+	vim.cmd("FzfLua marks")
+end, { desc = "Marks" })
+vim.keymap.set("n", "<leader>td", function()
+	fzf_setup()
+	vim.cmd("FzfLua diagnostics_workspace")
+end, { desc = "Diagnostics" })
+vim.keymap.set("n", "R", function()
+	fzf_setup()
+	vim.cmd("FzfLua lsp_references")
+end, { desc = "LSP references" })
 
 -- DAP (odkomentuj pro aktivaci debuggeru)
 -- require("dap")
@@ -632,4 +756,4 @@ vim.keymap.set("n", "R", ":FzfLua lsp_references<CR>", { desc = "LSP references"
 vim.keymap.set("n", "<leader>la", ":copen<CR>:AsyncRun make lintall<CR>", { desc = "make lintall" })
 vim.keymap.set("n", "<leader>lr", ":copen<CR>:AsyncRun revive ./...<CR>", { desc = "revive" })
 vim.keymap.set("n", "<leader>ll", ":copen<CR>:AsyncRun golangci-lint run ./...<CR>", { desc = "golangci-lint" })
-vim.keymap.set("n", "<leader>lc", ":copen<CR>:AsyncRun go tool gocritic check ./...<CR>", { desc = "gocritic" })
+vim.keymap.set("n", "<leader>lc", ":copen<CR>:AsyncRun gocritic check ./...<CR>", { desc = "gocritic" })
