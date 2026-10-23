@@ -251,4 +251,4 @@ Při uložení se automaticky smaže trailing whitespace. Go formátuje gopls (g
 | `→` | přijmout našeptávaný příkaz (zsh-autosuggestions) |
 | `⌥b` / `⌥f` | slovo zpět / vpřed |
 | `t` | `tmux` (`t a` = připojit se) |
-| `tmc` | nová tmux session pojmenovaná podle aktuálního adresáře |
+| `tmc` | tmux session pro aktuální adresář: založí ji (pokud není) a přepne se do ní, funguje uvnitř i mimo tmux |
