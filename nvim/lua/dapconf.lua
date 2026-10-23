@@ -1,3 +1,4 @@
+-- Nacita se az pri prvnim <leader>d* (viz init.lua).
 local dap = require("dap")
 local dapui = require("dapui")
 
@@ -42,35 +43,45 @@ require("dap-go").setup({
 	tests = { verbose = true },
 })
 
+-- debugpy bezi z mason venv, laděny program z .venv projektu
+local debugpy = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python"
+local dap_python = require("dap-python")
+dap_python.setup(vim.uv.fs_stat(debugpy) and debugpy or "python3")
+dap_python.test_runner = "pytest"
+dap_python.resolve_python = function()
+	return require("py").python()
+end
+
+vim.list_extend(dap.configurations.python, {
+	{
+		type = "python",
+		request = "launch",
+		name = "Django runserver",
+		program = "${workspaceFolder}/manage.py",
+		args = { "runserver", "--noreload" },
+		django = true,
+		jinja = true,
+		justMyCode = true,
+	},
+	{
+		type = "python",
+		request = "launch",
+		name = "FastAPI (uvicorn)",
+		module = "uvicorn",
+		args = function()
+			return { vim.fn.input("App (modul:app): ", "main:app"), "--port", "8000" }
+		end,
+		justMyCode = true,
+	},
+	{
+		type = "python",
+		request = "launch",
+		name = "pytest (cely projekt)",
+		module = "pytest",
+		args = { "-q" },
+		justMyCode = false,
+	},
+})
+
 vim.api.nvim_set_hl(0, "MyBreakpointSign", { fg = "#FF0000" })
 vim.fn.sign_define("DapBreakpoint", { text = "B", texthl = "MyBreakpointSign", linehl = "", numhl = "" })
-
-vim.keymap.set("n", "<leader>db", function()
-	require("dap").toggle_breakpoint()
-end, { desc = "Toggle breakpoint" })
-vim.keymap.set("n", "<leader>dB", function()
-	require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
-end, { desc = "Conditional breakpoint" })
-vim.keymap.set("n", "<leader>dc", function()
-	require("dap").continue()
-end, { desc = "Continue" })
-vim.keymap.set("n", "<leader>dC", function()
-	require("dap").run_to_cursor()
-end, { desc = "Run to cursor" })
-vim.keymap.set("n", "<leader>dsi", function()
-	require("dap").step_into()
-end, { desc = "Step into" })
-vim.keymap.set("n", "<leader>dso", function()
-	require("dap").step_over()
-end, { desc = "Step over" })
-vim.keymap.set("n", "<leader>dsO", function()
-	require("dap").step_out()
-end, { desc = "Step out" })
-vim.keymap.set("n", "<leader>dt", function()
-	require("dap-go").debug_test()
-end, { desc = "Debug test" })
-vim.keymap.set("n", "<leader>dq", function()
-	require("dap").terminate()
-	require("dapui").close()
-	require("nvim-dap-virtual-text").toggle()
-end, { desc = "Terminate" })

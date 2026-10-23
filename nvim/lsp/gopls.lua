@@ -32,7 +32,7 @@ return {
 			staticcheck = true,
 
 			-- new config
-			-- gofumpt = true,
+			gofumpt = true,
 			-- semanticTokens = true,
 		},
 	},

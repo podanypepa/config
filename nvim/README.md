@@ -21,13 +21,13 @@ Python and Lua supported as first-class secondary languages.
 ```
 .
 ├── init.lua              # everything: options, plugins, lazy loading, keymaps
-├── dap.lua               # debugger setup (opt-in, not sourced by default)
+├── lua/
+│   ├── dapconf.lua       # debugger setup, loaded on first DAP keymap
+│   └── py.lua            # Python: venv detection, pytest, formatting
 ├── lsp/                  # per-server configs picked up by vim.lsp.enable()
 │   ├── gopls.lua
-│   ├── pyright.lua
 │   └── lua_ls.lua
-├── nvim-pack-lock.json   # vim.pack lockfile — 29 plugins pinned by revision
-└── init.lua.bak          # previous version of the config, kept for reference
+└── nvim-pack-lock.json   # vim.pack lockfile — 31 plugins pinned by revision
 ```
 
 `lsp/<name>.lua` returns a plain config table. Neovim reads it automatically
@@ -225,10 +225,9 @@ opened automatically.
 Source priority: `copilot` → `nvim_lsp` → `path`, with `buffer` as a fallback
 group.
 
-## Debugging (opt-in)
+## Debugging
 
-`dap.lua` is **not** loaded by default. Enable it by uncommenting the
-`require("dap")` line near the end of `init.lua`, or source the file manually.
+`lua/dapconf.lua` is loaded lazily, on the first DAP keymap.
 
 It wires up `nvim-dap` with `dap-ui` (opens on session start, closes on
 terminate/exit), virtual text for variable values, and `dap-go` using `dlv`
@@ -245,4 +244,3 @@ with a 20 s init timeout and verbose test output.
 ## Notes
 
 - Comments inside `init.lua` are in Czech.
-- `init.lua.bak` is a snapshot of the previous configuration and is not loaded.

@@ -51,9 +51,28 @@ vim.api.nvim_set_hl(0, "Comment", { italic = true })
 
 vim.api.nvim_create_autocmd("TextYankPost", {
 	callback = function()
-		vim.highlight.on_yank({ higroup = "YankHighlight", timeout = 400 })
+		vim.hl.on_yank({ higroup = "YankHighlight", timeout = 400 })
 	end,
 })
+
+-- 'autoread' sam nic nehlida; zmeny zvenku (Claude Code, git) nacti pri navratu
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "TermLeave" }, {
+	callback = function()
+		if vim.fn.getcmdwintype() == "" then
+			vim.cmd.checktime()
+		end
+	end,
+})
+
+-- tmux: pane s nvim ma @pane-is-vim, tmux podle nej posle C-h/j/k/l sem
+if vim.env.TMUX then
+	local function tmux_flag(on)
+		local pane = vim.env.TMUX_PANE
+		vim.system(on and { "tmux", "set", "-p", "-t", pane, "@pane-is-vim", "1" } or { "tmux", "set", "-pu", "-t", pane, "@pane-is-vim" })
+	end
+	vim.api.nvim_create_autocmd({ "VimEnter", "VimResume" }, { callback = function() tmux_flag(true) end })
+	vim.api.nvim_create_autocmd({ "VimLeavePre", "VimSuspend" }, { callback = function() tmux_flag(false) end })
+end
 
 local gh = function(x)
 	return "https://github.com/" .. x
@@ -77,6 +96,8 @@ vim.pack.add({
 	gh("nvim-neotest/nvim-nio"),
 	gh("rcarriga/nvim-dap-ui"),
 	gh("leoluz/nvim-dap-go"),
+	gh("mfussenegger/nvim-dap-python"),
+	gh("b0o/SchemaStore.nvim"),
 	gh("theHamsta/nvim-dap-virtual-text"),
 	gh("neovim/nvim-lspconfig"),
 	gh("mason-org/mason.nvim"),
@@ -151,15 +172,48 @@ end
 -- Registry, :Mason a ensure_installed az po startu.
 vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
 
+-- `nvim` spusteny v projektu s .venv: aktivuj ho (term, ruff, pytest, debugpy).
+-- Az za mason/bin, aby mel prednost ruff ve verzi, kterou ma projekt.
+do
+	local venv = vim.fn.getcwd() .. "/.venv"
+	if not vim.env.VIRTUAL_ENV and vim.uv.fs_stat(venv .. "/bin/python") then
+		vim.env.VIRTUAL_ENV = venv
+		vim.env.PATH = venv .. "/bin:" .. vim.env.PATH
+	end
+end
+
 lazy(function()
 	require("mason").setup()
 	require("mason-lspconfig").setup({
-		ensure_installed = { "gopls", "pyright", "lua_ls" },
+		ensure_installed = { "gopls", "pyright", "ruff", "jsonls", "yamlls", "vtsls", "eslint", "biome", "lua_ls" },
 	})
+	-- ne-LSP nastroje (mason-lspconfig je neresi)
+	local registry = require("mason-registry")
+	registry.refresh(function()
+		for _, name in ipairs({ "debugpy" }) do
+			local ok, pkg = pcall(registry.get_package, name)
+			if ok and not pkg:is_installed() then
+				pkg:install()
+			end
+		end
+	end)
 end)
 
--- parsers (Go) - runtimepath i parsery se registruji az pri prvnim pouziti
-local ts_langs = { go = "go", gomod = "gomod", gowork = "gowork", gosum = "gosum", python = "python" }
+-- parsers (Go, Python, TOML, YAML, JSON, JS/TS) - runtimepath i parsery se registruji az pri prvnim pouziti
+local ts_langs = {
+	go = "go",
+	gomod = "gomod",
+	gowork = "gowork",
+	gosum = "gosum",
+	python = "python",
+	toml = "toml",
+	yaml = "yaml",
+	json = "json",
+	javascript = "javascript",
+	javascriptreact = "javascript",
+	typescript = "typescript",
+	typescriptreact = "tsx",
+}
 
 local ts_ready = false
 local function ts_setup()
@@ -169,11 +223,15 @@ local function ts_setup()
 	ts_ready = true
 	local data = vim.fn.stdpath("data")
 	vim.opt.runtimepath:append(data .. "/treesitter")
-	-- query files pro Go (highlights.scm atd.) jsou v nvim-treesitter
+	-- query files (highlights.scm atd.) jsou v nvim-treesitter
 	vim.cmd.packadd("nvim-treesitter")
 	local parser_dir = data .. "/treesitter/parser/"
-	for _, lang in ipairs({ "go", "gomod", "gowork", "gosum" }) do
-		vim.treesitter.language.add(lang, { path = parser_dir .. lang .. ".so" })
+	local seen = {}
+	for _, lang in pairs(ts_langs) do
+		if not seen[lang] then
+			seen[lang] = true
+			vim.treesitter.language.add(lang, { path = parser_dir .. lang .. ".so" })
+		end
 	end
 end
 
@@ -269,18 +327,132 @@ vim.api.nvim_set_hl(0, "CursorLineNr", { bg = nil, fg = "white" })
 vim.api.nvim_set_hl(0, "StatusLine", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "YankHighlight", { fg = "#ffffff", bg = "#8b0000" })
 vim.api.nvim_set_hl(0, "MojeBarvaSouboru", { fg = "#00ff00", bg = nil, bold = false })
-vim.opt.statusline = "%#MojeBarvaSouboru# %f %*"
+vim.api.nvim_set_hl(0, "StlModeNormal", { fg = "#888c90", bold = true })
+vim.api.nvim_set_hl(0, "StlModeInsert", { fg = "#ffffff", bg = "#8b0000", bold = true })
+vim.api.nvim_set_hl(0, "StlModeVisual", { fg = "#000000", bg = "#e0a050", bold = true })
+vim.api.nvim_set_hl(0, "StlModeReplace", { fg = "#ffffff", bg = "#a03080", bold = true })
+vim.api.nvim_set_hl(0, "StlModeCommand", { fg = "#000000", bg = "#6090d0", bold = true })
+
+-- mod podle prvniho znaku nvim_get_mode().mode (showmode je vypnuty)
+local stl_modes = {
+	n = { "NORMAL", "StlModeNormal" },
+	i = { "INSERT", "StlModeInsert" },
+	v = { "VISUAL", "StlModeVisual" },
+	V = { "V-LINE", "StlModeVisual" },
+	["\22"] = { "V-BLOCK", "StlModeVisual" },
+	s = { "SELECT", "StlModeVisual" },
+	S = { "S-LINE", "StlModeVisual" },
+	["\19"] = { "S-BLOCK", "StlModeVisual" },
+	R = { "REPLACE", "StlModeReplace" },
+	c = { "COMMAND", "StlModeCommand" },
+	t = { "TERMINAL", "StlModeInsert" },
+}
+function _G.stl_mode()
+	local m = stl_modes[vim.api.nvim_get_mode().mode:sub(1, 1)] or { "NORMAL", "StlModeNormal" }
+	return "%#" .. m[2] .. "# " .. m[1] .. " %*"
+end
+vim.opt.statusline = "%{%v:lua.stl_mode()%}%#MojeBarvaSouboru# %f %*"
+vim.api.nvim_create_autocmd("ModeChanged", { command = "redrawstatus" })
 vim.api.nvim_set_hl(0, "LspReferenceText", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "LspReferenceRead", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "LspReferenceWrite", { bg = "NONE" })
 
-vim.lsp.enable("gopls")
-vim.lsp.enable("pyright")
-vim.lsp.enable("lua_ls")
+-- LSP setup az po prvnim vykresleni: require("vim.lsp") + resolve lsp/*.lua
+-- u kazdeho enable() je ~5 ms. enable() po VimEnter se sam pripoji
+-- i k bufferum otevrenym z prikazove radky.
+lazy(function()
+	-- Copilot sype AbortError na stderr, ktery vim.lsp loguje jako ERROR.
+	-- Log bez tohohle roste na desitky MB. Pro ladeni prepni na "WARN".
+	vim.lsp.log.set_level(vim.log.levels.OFF)
+
+	-- nvim-lspconfig je v rtp az za ~/.config/nvim, takze jeho lsp/gopls.lua
+	-- prebije nase filetypes. vim.lsp.config() ma vyssi prioritu nez lsp/*.lua.
+	vim.lsp.config("gopls", { filetypes = { "go", "gomod", "gowork" } })
+	vim.lsp.enable("gopls")
+	-- Pyright = typy, ruff = lint/format/importy. Venv se hleda v koreni projektu.
+	vim.lsp.config("pyright", {
+		settings = {
+			pyright = { disableOrganizeImports = true },
+			python = {
+				analysis = {
+					typeCheckingMode = "basic",
+					autoImportCompletions = true,
+					diagnosticMode = "openFilesOnly",
+				},
+			},
+		},
+		before_init = function(_, config)
+			config.settings.python.pythonPath = require("py").python(config.root_dir)
+		end,
+	})
+	vim.lsp.config("ruff", {
+		init_options = {
+			settings = {
+				-- plati jen kdyz projekt nema vlastni [tool.ruff]
+				lint = { extendSelect = { "I", "B", "UP" } },
+			},
+		},
+	})
+	vim.lsp.enable("pyright")
+	vim.lsp.enable("ruff")
+
+	-- JSON: validace podle SchemaStore (package.json, tsconfig, compose...).
+	-- Katalog je velka tabulka, nacita se az pri startu serveru.
+	vim.lsp.config("jsonls", {
+		settings = { json = { validate = { enable = true } } },
+		before_init = function(_, config)
+			config.settings.json.schemas = require("schemastore").json.schemas()
+		end,
+	})
+	vim.lsp.enable("jsonls")
+
+	-- YAML: stejne schemata (GitHub Actions, compose, k8s...). Vestaveny
+	-- schemaStore yamlls vypnuty, jinak by katalog stahoval znovu sam.
+	vim.lsp.config("yamlls", {
+		settings = {
+			yaml = {
+				validate = true,
+				schemaStore = { enable = false, url = "" },
+			},
+		},
+		before_init = function(_, config)
+			config.settings.yaml.schemas = require("schemastore").yaml.schemas()
+		end,
+	})
+	vim.lsp.enable("yamlls")
+
+	-- JS/TS: vtsls = typy/doplnovani, eslint + biome jen v projektech s jejich configem
+	vim.lsp.config("vtsls", {
+		settings = {
+			vtsls = { autoUseWorkspaceTsdk = true },
+			typescript = { updateImportsOnFileMove = { enabled = "always" } },
+			javascript = { updateImportsOnFileMove = { enabled = "always" } },
+		},
+	})
+	vim.lsp.enable("vtsls")
+	vim.lsp.enable("eslint")
+	vim.lsp.enable("biome")
+	vim.lsp.enable("lua_ls")
+end)
 
 vim.api.nvim_create_autocmd("LspAttach", {
 	callback = function(ev)
 		local client = vim.lsp.get_client_by_id(ev.data.client_id)
+		if client.name == "ruff" then
+			-- hover dela pyright
+			client.server_capabilities.hoverProvider = false
+		end
+		if client.name == "eslint" then
+			-- eslint --fix pred ulozenim, formatter (prettier/biome) jede po nem
+			vim.api.nvim_create_autocmd("BufWritePre", {
+				buffer = ev.buf,
+				callback = function()
+					if vim.fn.exists(":LspEslintFixAll") == 2 then
+						vim.cmd("LspEslintFixAll")
+					end
+				end,
+			})
+		end
 		if client:supports_method("textDocument/completion") then
 			vim.opt.completeopt = { "menu", "menuone", "noinsert", "fuzzy", "popup" }
 			vim.keymap.set("i", "<C-Space>", function()
@@ -456,13 +628,21 @@ end)
 
 lazy(function()
 	local util = require("formatter.util")
+	-- Biome kdyz ho projekt pouziva, jinak prettier. Oba se berou
+	-- z node_modules projektu, kdyz tam jsou (sedi verze s CI).
+	local biome_files = { "biome.json", "biome.jsonc" }
+	local function js_formatter()
+		if vim.fs.root(0, biome_files) then
+			local cfg = require("formatter.filetypes.javascript").biome()
+			cfg.try_node_modules = true
+			return cfg
+		end
+		return require("formatter.filetypes.javascript").prettier()
+	end
 	require("formatter").setup({
 		logging = true,
 		log_level = vim.log.levels.WARN,
 		filetype = {
-			go = {
-				require("formatter.filetypes.go").gofumpt,
-			},
 			rust = {
 				require("formatter.filetypes.rust").rustfmt,
 			},
@@ -470,19 +650,17 @@ lazy(function()
 				function()
 					return {
 						exe = "jq",
-						args = { "--indent 4", "." },
+						args = { "--indent", "4", "." },
 						stdin = true,
 					}
 				end,
 			},
-			javascript = {
-				require("formatter.filetypes.javascript").prettier,
-			},
+			javascript = { js_formatter },
+			javascriptreact = { js_formatter },
+			typescript = { js_formatter },
+			typescriptreact = { js_formatter },
 			svelte = {
 				require("formatter.filetypes.javascript").prettier,
-			},
-			typescript = {
-				require("formatter.filetypes.typescript").prettier,
 			},
 			html = {
 				require("formatter.filetypes.html").prettier,
@@ -498,9 +676,6 @@ lazy(function()
 						stdin = true,
 					}
 				end,
-			},
-			python = {
-				require("formatter.filetypes.python").black,
 			},
 			lua = {
 				require("formatter.filetypes.lua").stylua,
@@ -521,37 +696,64 @@ lazy(function()
 					}
 				end,
 			},
-			["*"] = {
-				require("formatter.filetypes.any").remove_trailing_whitespace,
-			},
 		},
 	})
 end)
 
+-- Trailing whitespace pred zapisem (driv "*" ve formatteru = druhy zapis kazdeho souboru)
+vim.api.nvim_create_autocmd("BufWritePre", {
+	callback = function()
+		local view = vim.fn.winsaveview()
+		vim.cmd([[keeppatterns %s/\s\+$//e]])
+		vim.fn.winrestview(view)
+	end,
+})
+
+-- FormatWrite jen pro filetypy, ktere formatter opravdu ma (Go resi gopls nize)
 vim.api.nvim_create_augroup("__formatter__", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePost", {
 	group = "__formatter__",
-	command = ":FormatWrite",
+	callback = function(ev)
+		if require("formatter.config").values.filetype[vim.bo[ev.buf].filetype] then
+			vim.cmd("FormatWrite")
+		end
+	end,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "python",
+	callback = function(ev)
+		require("py").attach(ev.buf)
+	end,
 })
 
 vim.api.nvim_create_autocmd("BufWritePre", {
 	pattern = "*.go",
-	callback = function()
+	-- organize imports + gofumpt (gopls) pred zapisem, bez externiho procesu
+	callback = function(ev)
 		local client = vim.lsp.get_clients({ bufnr = 0 })[1]
 		local enc = client and client.offset_encoding or "utf-16"
 		local params = vim.lsp.util.make_range_params(0, enc)
 		params.context = { only = { "source.organizeImports" }, diagnostics = {} }
 		local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 3000)
 		for cid, res in pairs(result or {}) do
+			local c = vim.lsp.get_client_by_id(cid)
 			for _, r in pairs(res.result or {}) do
 				if r.edit then
-					local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
-					vim.lsp.util.apply_workspace_edit(r.edit, enc)
-				elseif r.command then
-					vim.lsp.buf.execute_command(r.command)
+					vim.lsp.util.apply_workspace_edit(r.edit, c and c.offset_encoding or "utf-16")
+				end
+				if c and r.command then
+					c:exec_cmd(type(r.command) == "table" and r.command or r, { bufnr = ev.buf })
 				end
 			end
 		end
+		vim.lsp.buf.format({
+			bufnr = ev.buf,
+			timeout_ms = 3000,
+			filter = function(cl)
+				return cl.name == "gopls"
+			end,
+		})
 	end,
 })
 
@@ -649,8 +851,12 @@ vim.keymap.set("n", "gT", function()
 end, { desc = "Peek type definition" })
 vim.keymap.set("n", "<C-]>", "<cmd>lua vim.lsp.buf.definition()<CR>", { silent = true })
 vim.keymap.set("n", "<leader>do", "<cmd>lua vim.diagnostic.open_float()<CR>", { noremap = true, silent = true })
-vim.keymap.set("n", "[e", "<cmd>lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})<CR>")
-vim.keymap.set("n", "]e", "<cmd>lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})<CR>")
+vim.keymap.set("n", "[e", function()
+	vim.diagnostic.jump({ count = -1, severity = vim.diagnostic.severity.ERROR })
+end)
+vim.keymap.set("n", "]e", function()
+	vim.diagnostic.jump({ count = 1, severity = vim.diagnostic.severity.ERROR })
+end)
 vim.keymap.set("n", "<leader>oi", function()
 	vim.lsp.buf.code_action({ context = { only = { "source.organizeImports" } }, apply = true })
 end, { desc = "Organize imports" })
@@ -661,10 +867,18 @@ vim.keymap.set("n", "<S-Tab>", ":bp<CR>")
 vim.keymap.set("n", "<leader>q", "<cmd>bdelete<CR>", { desc = "Close buffer" })
 
 -- Windows
-vim.keymap.set("n", "<C-h>", "<C-w>h")
-vim.keymap.set("n", "<C-l>", "<C-w>l")
-vim.keymap.set("n", "<C-j>", "<C-w>j")
-vim.keymap.set("n", "<C-k>", "<C-w>k")
+local function navigate(dir, tmux_dir)
+	-- na okraji pokracuje do sousedniho tmux pane
+	local win = vim.api.nvim_get_current_win()
+	vim.cmd.wincmd(dir)
+	if vim.env.TMUX and win == vim.api.nvim_get_current_win() then
+		vim.system({ "tmux", "select-pane", "-" .. tmux_dir })
+	end
+end
+vim.keymap.set("n", "<C-h>", function() navigate("h", "L") end)
+vim.keymap.set("n", "<C-l>", function() navigate("l", "R") end)
+vim.keymap.set("n", "<C-j>", function() navigate("j", "D") end)
+vim.keymap.set("n", "<C-k>", function() navigate("k", "U") end)
 
 -- Editing
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
@@ -749,8 +963,54 @@ vim.keymap.set("n", "R", function()
 	vim.cmd("FzfLua lsp_references")
 end, { desc = "LSP references" })
 
--- DAP (odkomentuj pro aktivaci debuggeru)
--- require("dap")
+-- DAP - setup (lua/dapconf.lua) az pri prvnim pouziti
+local function dap_do(fn)
+	return function()
+		require("dapconf")
+		fn(require("dap"))
+	end
+end
+vim.keymap.set("n", "<leader>db", dap_do(function(dap)
+	dap.toggle_breakpoint()
+end), { desc = "Toggle breakpoint" })
+vim.keymap.set("n", "<leader>dB", dap_do(function(dap)
+	dap.set_breakpoint(vim.fn.input("Breakpoint condition: "))
+end), { desc = "Conditional breakpoint" })
+vim.keymap.set("n", "<leader>dc", dap_do(function(dap)
+	dap.continue()
+end), { desc = "Continue / start" })
+vim.keymap.set("n", "<leader>dC", dap_do(function(dap)
+	dap.run_to_cursor()
+end), { desc = "Run to cursor" })
+vim.keymap.set("n", "<leader>dsi", dap_do(function(dap)
+	dap.step_into()
+end), { desc = "Step into" })
+vim.keymap.set("n", "<leader>dso", dap_do(function(dap)
+	dap.step_over()
+end), { desc = "Step over" })
+vim.keymap.set("n", "<leader>dsO", dap_do(function(dap)
+	dap.step_out()
+end), { desc = "Step out" })
+vim.keymap.set("n", "<leader>de", dap_do(function()
+	require("dapui").eval()
+end), { desc = "Eval under cursor" })
+vim.keymap.set("n", "<leader>du", dap_do(function()
+	require("dapui").toggle()
+end), { desc = "Toggle DAP UI" })
+vim.keymap.set("n", "<leader>dt", dap_do(function()
+	if vim.bo.filetype == "python" then
+		require("dap-python").test_method()
+	else
+		require("dap-go").debug_test()
+	end
+end), { desc = "Debug test" })
+vim.keymap.set("n", "<leader>dT", dap_do(function()
+	require("dap-python").test_class()
+end), { desc = "Debug test class (python)" })
+vim.keymap.set("n", "<leader>dq", dap_do(function(dap)
+	dap.terminate()
+	require("dapui").close()
+end), { desc = "Terminate" })
 
 -- AsyncRun / Go linters
 vim.keymap.set("n", "<leader>la", ":copen<CR>:AsyncRun make lintall<CR>", { desc = "make lintall" })
