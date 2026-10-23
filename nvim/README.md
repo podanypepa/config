@@ -126,104 +126,8 @@ on `BufWritePre`.
 
 ## Keymaps
 
-Leader is `<Space>`.
-
-### Files, search, navigation
-
-| Key | Action |
-| --- | --- |
-| `-` | open parent directory in oil |
-| `<leader><space>` | find files |
-| `<leader><Tab>` | buffers |
-| `<leader>fw` | live grep |
-| `<leader>fu` | grep word under cursor |
-| `<leader>fm` | marks |
-| `<leader>td` | workspace diagnostics |
-| `<Esc><Esc>` | clear search highlight |
-
-### LSP
-
-| Key | Action |
-| --- | --- |
-| `<C-]>` | go to definition |
-| `gt` | go to type definition |
-| `gT` | **peek** type definition in a floating window (brace-matched, auto-closing) |
-| `R` | LSP references (fzf) |
-| `<leader>do` | open diagnostic float |
-| `[e` / `]e` | previous / next **error** |
-| `<leader>oi` | organize imports |
-| `<C-Space>` (insert) | native LSP completion |
-
-### Buffers and windows
-
-| Key | Action |
-| --- | --- |
-| `<Tab>` / `<S-Tab>` | next / previous buffer |
-| `<leader>q` | close buffer |
-| `<C-h/j/k/l>` | move between windows |
-
-### Editing
-
-| Key | Action |
-| --- | --- |
-| `J` / `K` (visual) | move selection down / up |
-| `J` (normal) | join lines, keep cursor position |
-| `n` / `N` | next / previous match, centered |
-| `<` / `>` (visual) | indent, keep selection |
-| `p` (visual) | paste without clobbering the register |
-| `<leader>s` | substitute word under cursor across the file |
-| `F` | `:Format` |
-| `<leader>so` | source the current file |
-
-### Clipboard
-
-| Key | Action |
-| --- | --- |
-| `<leader>y` / `<leader>Y` | yank to system clipboard (selection / line) |
-| `<leader>p` | paste from system clipboard |
-| `<leader>D` | delete into the black-hole register |
-| `<leader>cp` | copy the absolute path of the current file |
-
-### Terminal
-
-| Key | Action |
-| --- | --- |
-| `<leader>tt` | terminal in the current window |
-| `<leader>st` | horizontal split terminal, 10 rows |
-| `<leader>vt` | vertical split terminal, one third of the width |
-| `<Esc><Esc>` (terminal) | leave terminal mode |
-
-### Quickfix and Go linters
-
-| Key | Action |
-| --- | --- |
-| `<leader>h` / `<leader>;` | next / previous quickfix entry |
-| `<leader>la` | `make lintall` |
-| `<leader>ll` | `golangci-lint run ./...` |
-| `<leader>lr` | `revive ./...` |
-| `<leader>lc` | `gocritic check ./...` |
-
-All linters run through `asyncrun.vim` and populate the quickfix list, which is
-opened automatically.
-
-### Git
-
-| Key | Action |
-| --- | --- |
-| `<leader>ne` | Neogit |
-
-### Completion (nvim-cmp)
-
-| Key | Action |
-| --- | --- |
-| `<C-n>` / `<C-p>` | next / previous item, or open the menu |
-| `<Up>` / `<Down>` | select item |
-| `<CR>` / `<C-y>` | confirm |
-| `<C-e>` | abort |
-| `<C-d>` / `<C-u>` | scroll documentation |
-
-Source priority: `copilot` → `nvim_lsp` → `path`, with `buffer` as a fallback
-group.
+Leader is `<Space>`. The full list of keymaps (together with Ghostty, tmux
+and zsh) lives in the [root README](../README.md#neovim).
 
 ## Debugging
 
@@ -233,13 +137,7 @@ It wires up `nvim-dap` with `dap-ui` (opens on session start, closes on
 terminate/exit), virtual text for variable values, and `dap-go` using `dlv`
 with a 20 s init timeout and verbose test output.
 
-| Key | Action |
-| --- | --- |
-| `<leader>db` / `<leader>dB` | toggle breakpoint / conditional breakpoint |
-| `<leader>dc` / `<leader>dC` | continue / run to cursor |
-| `<leader>dsi` / `<leader>dso` / `<leader>dsO` | step into / over / out |
-| `<leader>dt` | debug the test under the cursor |
-| `<leader>dq` | terminate and close the UI |
+Keymaps: see the [root README](../README.md#debugger-dap).
 
 ## Notes
 
