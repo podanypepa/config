@@ -91,6 +91,7 @@ Taby Ghostty se nepoužívají, jejich roli mají tmux okna.
 | `[` | copy mode |
 | `]` | vložit tmux buffer |
 | `r` | znovu načíst config |
+| `Ctrl+s` / `Ctrl+r` | uložit / obnovit všechny sessions (automaticky se ukládá každých 15 min a obnovuje po startu tmuxu) |
 | `Ctrl+l` | vyčistit obrazovku v shellu |
 | `Ctrl+a` | poslat `Ctrl+a` aplikaci |
 
