@@ -1,51 +1,115 @@
+"$schema" = "https://starship.rs/config-schema.json"
+
+# Rychlost: jazyky jen jako ikona (zadne `go version`/`node --version` pri kazdem
+# promptu), python ukazuje jen virtualenv (env promenna, zdarma). Nejdrazsi je
+# git_status (~30 ms ve velkem repu). Mereni: `starship timings`.
 format = """
 $hostname\
 $directory\
-$golang\
-$python\
 $git_branch\
-$git_commit\
 $git_state\
 $git_status\
-$git_metrics\
-$nodejs\
+${custom.go}\
+$python\
+${custom.node}\
+$direnv\
+$cmd_duration\
+$jobs\
 $line_break\
 $character"""
 add_newline = true
 
-command_timeout = 3600000
-# ignore_timeout = true
+# Zaseknuty modul nesmi blokovat prompt
+command_timeout = 500
+scan_timeout = 20
 
 [character]
-success_symbol = '[❯](bold green)'
-error_symbol = '[❯](bold red)'
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold green)"
 
-[package]
-disabled = false
-
-[username]
-show_always = true
-style_user = "bg:#9A348E"
-style_root = "bg:#9A348E"
-format = '[$user ]($style)'
+[hostname]
+# jen pres SSH
+format = "[ $hostname]($style) "
+style = "bold dimmed white"
 
 [directory]
 truncation_length = 0
 truncate_to_repo = false
 style = "bold blue"
-
-[cmd_duration]
-min_time = 5
-show_milliseconds = true
-
-[golang]
-symbol = ""
-format = '[$symbol ($version) ]($style)'
+read_only = " "
 
 [git_branch]
-format = " [$symbol$branch]($style) "
+symbol = " "
+format = "[$symbol$branch]($style) "
 style = "bold yellow"
 
+[git_state]
+format = '[\($state( $progress_current/$progress_total)\)]($style) '
+
+[git_status]
+format = "([$all_status$ahead_behind]($style) )"
+style = "bold red"
+conflicted = "=${count} "
+untracked = "?${count} "
+modified = "!${count} "
+staged = "+${count} "
+renamed = "»${count} "
+deleted = "✘${count} "
+stashed = "≡ "
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇡${ahead_count}⇣${behind_count}"
+
+# Go / Node: vlastni moduly jen podle souboru v adresari. Vestavene golang/nodejs
+# spousti `go version` / `node --version` vzdy (kontrola engines), i bez verze ve formatu.
+[custom.go]
+symbol = " "
+detect_files = ["go.mod", "go.work"]
+detect_extensions = ["go"]
+format = "[$symbol]($style)"
+style = "bold cyan"
+
 [python]
-# symbol = '👾 '
-pyenv_version_name = true
+symbol = " "
+format = '[$symbol(\($virtualenv\) )]($style)'
+style = "bold yellow"
+detect_extensions = ["py", "ipynb"]
+detect_files = [
+  "pyproject.toml",
+  "uv.lock",
+  ".python-version",
+  "requirements.txt",
+  "setup.py",
+]
+detect_folders = [".venv"]
+
+[custom.node]
+# js/ts projekty
+symbol = " "
+detect_files = ["package.json", "tsconfig.json", ".nvmrc", ".node-version"]
+detect_extensions = ["js", "mjs", "cjs", "ts", "mts", "cts"]
+format = "[$symbol]($style)"
+style = "bold green"
+
+[direnv]
+disabled = false
+format = "[$symbol$allowed]($style) "
+symbol = "envrc"
+allowed_msg = ""
+not_allowed_msg = " ✗"
+denied_msg = " ✗"
+style = "dimmed white"
+
+[cmd_duration]
+min_time = 2000
+format = "[ $duration]($style) "
+style = "yellow"
+# notifikace macOS, kdyz dlouhy prikaz dobehne a terminal neni v popredi
+show_notifications = true
+min_time_to_notify = 30000
+
+[jobs]
+symbol = "✦"
+format = "[$symbol$number]($style) "
+style = "bold blue"
