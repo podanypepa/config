@@ -40,8 +40,10 @@ theme = Builtin Pastel Dark
 # background-opacity = 1
 # background-opacity = 0.8
 
-window-padding-x = 10
-window-padding-y = 10
+# [FULLSCREEN SETUP] mensi padding = vic mista (puvodne x=10, y=10)
+window-padding-x = 4
+window-padding-y = 2
+window-padding-balance = true
 
 font-family = "SauceCodePro Nerd Font"
 font-family-bold = "SauceCodePro Nerd Font"
@@ -89,3 +91,28 @@ confirm-close-surface = false
 scrollbar = never
 
 config-file = "?~/.config/ghostty/mac16.toml"
+
+# ============================================================
+# [FULLSCREEN SETUP] max plocha, bez Ghostty tabu, vse pres tmux windows
+# ============================================================
+# Zadna lista (Ghostty taby nejsou videt, pouzij tmux windows)
+macos-titlebar-style = hidden
+
+# Okno startuje ve fullscreenu
+fullscreen = true
+
+# Ne-nativni fullscreen: okamzity, bez animace a vlastniho Space; padded-notch = obsah pod notchem
+macos-non-native-fullscreen = padded-notch
+
+# Prepinani fullscreenu (vychozi binding, jen explicitne)
+keybind = cmd+enter=toggle_fullscreen
+
+# Levy Option jako Alt/Meta pro tmux/vim, pravy Option dal pise specialni znaky
+macos-option-as-alt = left
+
+# --- ALTERNATIVA: funkcni Ghostty taby (potrebuji titlebar + nativni fullscreen)
+# macos-titlebar-style = tabs
+# macos-non-native-fullscreen = false
+# ============================================================
+
+# macos-titlebar-proxy-icon = hidden
