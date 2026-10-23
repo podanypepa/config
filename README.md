@@ -47,6 +47,7 @@ Klávesa jde přes tři vrstvy: **Ghostty → tmux → aplikace v pane** (shell,
 | --- | --- |
 | `⌘↵` | fullscreen zapnout / vypnout (ne-nativní, bez animace) |
 | ``⌘` `` | quick terminal, rozbalí se shora odkudkoli (globální, potřebuje Zpřístupnění) |
+| `⌘⇧O` | průhledné / neprůhledné pozadí (okno startuje průhledné, 40 %) |
 | `⌘+` / `⌘-` / `⌘0` | větší / menší / výchozí písmo |
 | `⌘,` | otevřít config |
 | `⌘⇧,` | znovu načíst config |

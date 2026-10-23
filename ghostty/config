@@ -37,8 +37,12 @@ theme = Builtin Pastel Dark
 # theme = Adwaita
 # theme = Apple System Colors Light
 
-# background-opacity = 1
-# background-opacity = 0.8
+# Pruhlednost (napr. video v prohlizeci za terminalem); prepinac: cmd+shift+o
+# Okno startuje pruhledne, toggle prepina na nepruhledne a zpet.
+# Zmena opacity vyzaduje uplny restart Ghostty.
+background-opacity = 0.4
+background-blur = false
+keybind = cmd+shift+o=toggle_background_opacity
 
 # [FULLSCREEN SETUP] mensi padding = vic mista (puvodne x=10, y=10)
 window-padding-x = 4
