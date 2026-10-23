@@ -54,7 +54,8 @@ font-feature = -calt, -liga, -dlig
 
 window-title-font-family = "SauceCodePro Nerd Font"
 
-# keybind = global:cmd+grave_accent=toggle_quick_terminal
+# Quick terminal: rozbalovaci terminal odkudkoli (vyzaduje Accessibility povoleni)
+keybind = global:cmd+grave_accent=toggle_quick_terminal
 # keybind = shift+left=previous_tab
 # keybind = shift+right=next_tab
 # keybind = alt+left=goto_split:previous
@@ -85,12 +86,11 @@ window-new-tab-position = current
 
 cursor-style = block
 cursor-style-blink = false
-shell-integration-features = no-cursor
+# ssh-terminfo: na server nainstaluje xterm-ghostty terminfo, ssh-env: fallback TERM
+shell-integration-features = no-cursor,ssh-terminfo,ssh-env
 
 confirm-close-surface = false
 scrollbar = never
-
-config-file = "?~/.config/ghostty/mac16.toml"
 
 # ============================================================
 # [FULLSCREEN SETUP] max plocha, bez Ghostty tabu, vse pres tmux windows
