@@ -39,10 +39,18 @@ theme = Builtin Pastel Dark
 
 # Pruhlednost (napr. video v prohlizeci za terminalem); prepinac: cmd+shift+o
 # Okno startuje pruhledne, toggle prepina na nepruhledne a zpet.
-# Zmena opacity vyzaduje uplny restart Ghostty.
+# Prechod z 1 na <1 vyzaduje uplny restart Ghostty.
 background-opacity = 0.4
 background-blur = false
 keybind = cmd+shift+o=toggle_background_opacity
+# Intenzita za behu: cmd+shift+= mene pruhledne, cmd+shift+- vic pruhledne (krok 0.05),
+# cmd+shift+0 zpet na 0.4.
+# Jde pres tmux (prefix + / _ / |) -> opacity.sh, ktery prepise soubor nize a da reload_config.
+keybind = cmd+shift+equal=text:\x01+
+keybind = cmd+shift+minus=text:\x01_
+keybind = cmd+shift+digit_0=text:\x01|
+# Hodnotu z opacity.sh (prepisuje background-opacity vyse); ? = nevadi, kdyz chybi
+config-file = ?/Users/pepa/.config/ghostty/opacity
 
 # [FULLSCREEN SETUP] mensi padding = vic mista (puvodne x=10, y=10)
 window-padding-x = 4
