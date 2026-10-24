@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Vyber tmux session nebo adresar (git repa v ROOTS + zoxide) pres fzf; adresar dostane vlastni session.
+# Vyber tmux session nebo adresar (git repa v ROOTS + zoxide) pres fzf; adresar otevre project-session.sh.
 ROOTS=("$HOME/src" "$HOME/switchly.ai")
 
 projects() {
@@ -23,6 +23,4 @@ if tmux has-session -t "=$sel" 2>/dev/null; then
 	exit
 fi
 
-name=$(basename "$sel" | tr '.:' '__')
-tmux has-session -t "=$name" 2>/dev/null || tmux new-session -ds "$name" -c "$sel"
-tmux switch-client -t "=$name"
+exec "$(dirname "$0")/project-session.sh" "$sel"

@@ -55,7 +55,17 @@ Klávesa jde přes tři vrstvy: **Ghostty → tmux → aplikace v pane** (shell,
 | `⌘C` / `⌘V` | kopírovat / vložit |
 | `Shift` + tažení myší | výběr přes Ghostty místo tmuxu a aplikace (třeba v nvim) |
 
-Taby Ghostty se nepoužívají, jejich roli mají tmux okna.
+Taby Ghostty se nepoužívají, jejich roli mají tmux okna. Zkratky jako u tabů proto ovládají tmux: Ghostty pošle prefix + klávesu. Mimo tmux (quick terminal) nefungují.
+
+| Klávesa | Akce v tmuxu |
+| --- | --- |
+| `⌘T` | nové okno ve stejném adresáři |
+| `⌘1` … `⌘9` | okno 1–9 |
+| `⌘⇧[` / `⌘⇧]` | předchozí / další okno |
+| `⌘D` / `⌘⇧D` | split vedle sebe / pod sebe |
+| `⌘⇧↵` | zoom pane a zpět |
+| `⌘W` | zavřít pane (s potvrzením) |
+| `⌘K` | přepínač sessions a projektů |
 
 ## tmux
 
@@ -73,7 +83,7 @@ Taby Ghostty se nepoužívají, jejich roli mají tmux okna.
 
 | Klávesa | Akce |
 | --- | --- |
-| `f` | **přepínač sessions a projektů** (fzf popup: sessions, git repa v `~/src` a `~/switchly.ai`, zoxide) |
+| `f` | **přepínač sessions a projektů** (fzf popup: sessions, git repa v `~/src` a `~/switchly.ai`, zoxide); nový projekt dostane okna viz níže |
 | `v` / `s` | split vedle sebe / pod sebe, ve stejném adresáři |
 | `h/j/k/l` | přepnout pane |
 | `⌥←↑↓→` | změnit velikost pane o 5 (opakovatelné bez nového prefixu) |
@@ -94,6 +104,18 @@ Taby Ghostty se nepoužívají, jejich roli mají tmux okna.
 | `Ctrl+s` / `Ctrl+r` | uložit / obnovit všechny sessions (automaticky se ukládá každých 15 min a obnovuje po startu tmuxu) |
 | `Ctrl+l` | vyčistit obrazovku v shellu |
 | `Ctrl+a` | poslat `Ctrl+a` aplikaci |
+
+### Nový projekt
+
+`prefix f` / `⌘K` / `tmc` otevřou pro projekt (git repo, `go.mod`, `package.json`, `pyproject.toml`) session s okny:
+
+| Okno | Obsah |
+| --- | --- |
+| `1 edit` | nvim |
+| `2 shell` | shell |
+| `3 run` | připravený příkaz, spustí se až Enterem: Go `go test ./...`, JS/TS `<pm> run dev` (nebo `<pm> test`; pm podle lockfile: npm/pnpm/yarn/bun), Python `uv run pytest` / `pytest` |
+
+Jiný adresář dostane jednu obyčejnou session. Script: `tmux/project-session.sh`.
 
 ### Copy mode (vi)
 
@@ -251,4 +273,4 @@ Při uložení se automaticky smaže trailing whitespace. Go formátuje gopls (g
 | `→` | přijmout našeptávaný příkaz (zsh-autosuggestions) |
 | `⌥b` / `⌥f` | slovo zpět / vpřed |
 | `t` | `tmux` (`t a` = připojit se) |
-| `tmc` | tmux session pro aktuální adresář: založí ji (pokud není) a přepne se do ní, funguje uvnitř i mimo tmux |
+| `tmc` | tmux session pro aktuální adresář s okny podle typu projektu (viz tmux → Nový projekt); funguje uvnitř i mimo tmux |
