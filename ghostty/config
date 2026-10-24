@@ -114,6 +114,26 @@ keybind = cmd+enter=toggle_fullscreen
 # Levy Option jako Alt/Meta pro tmux/vim, pravy Option dal pise specialni znaky
 macos-option-as-alt = left
 
+# Cmd zkratky ovladaji tmux: posilaji prefix (Ctrl+a = \x01) + klavesu.
+# Mimo tmux (quick terminal) nedavaji smysl.
+keybind = cmd+t=text:\x01c
+keybind = cmd+w=text:\x01x
+keybind = cmd+d=text:\x01v
+keybind = cmd+shift+d=text:\x01s
+keybind = cmd+k=text:\x01f
+keybind = cmd+shift+enter=text:\x01z
+keybind = cmd+shift+bracket_left=text:\x01p
+keybind = cmd+shift+bracket_right=text:\x01n
+keybind = cmd+digit_1=text:\x011
+keybind = cmd+digit_2=text:\x012
+keybind = cmd+digit_3=text:\x013
+keybind = cmd+digit_4=text:\x014
+keybind = cmd+digit_5=text:\x015
+keybind = cmd+digit_6=text:\x016
+keybind = cmd+digit_7=text:\x017
+keybind = cmd+digit_8=text:\x018
+keybind = cmd+digit_9=text:\x019
+
 # --- ALTERNATIVA: funkcni Ghostty taby (potrebuji titlebar + nativni fullscreen)
 # macos-titlebar-style = tabs
 # macos-non-native-fullscreen = false
