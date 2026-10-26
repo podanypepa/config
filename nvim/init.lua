@@ -123,6 +123,9 @@ vim.pack.add({
 	gh("hrsh7th/cmp-path"),
 	gh("L3MON4D3/LuaSnip"),
 	gh("zbirenbaum/copilot-cmp"),
+	-- jen pro instalaci/aktualizaci parseru (up → nvim-ts-update.lua); za behu
+	-- staci parsery a query v stdpath("data")/treesitter, viz ts_setup
+	{ src = gh("nvim-treesitter/nvim-treesitter"), version = "main" },
 }, { load = function() end })
 
 -- ── lazy loading ──────────────────────────────────────────────────────────
@@ -221,18 +224,11 @@ local function ts_setup()
 		return
 	end
 	ts_ready = true
-	local data = vim.fn.stdpath("data")
-	vim.opt.runtimepath:append(data .. "/treesitter")
-	-- query files (highlights.scm atd.) jsou v nvim-treesitter
+	-- nvim-treesitter (vetev main) sem instaluje parser/<lang>.so a queries/<lang>
+	-- (symlinky do pluginu); z runtimepath si je Neovim najde sam
+	vim.opt.runtimepath:append(vim.fn.stdpath("data") .. "/treesitter")
+	-- vlastni predikaty a direktivy, ktere query soubory pouzivaji
 	vim.cmd.packadd("nvim-treesitter")
-	local parser_dir = data .. "/treesitter/parser/"
-	local seen = {}
-	for _, lang in pairs(ts_langs) do
-		if not seen[lang] then
-			seen[lang] = true
-			vim.treesitter.language.add(lang, { path = parser_dir .. lang .. ".so" })
-		end
-	end
 end
 
 vim.api.nvim_create_autocmd("FileType", {
