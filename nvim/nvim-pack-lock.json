@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "067b472f6dbc04520982acc9ab14f27c68195c70",
+      "rev": "4794bb7a4cf66b894f0029c3094b7936a8c0e8fe",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "asyncrun.vim": {
@@ -29,7 +29,7 @@
       "src": "https://github.com/zbirenbaum/copilot-cmp"
     },
     "copilot.lua": {
-      "rev": "891bb2fda9595307e762cead6a2b7dc2f4076c37",
+      "rev": "192b297ef37d9f6a8b889c07fb9a3dd16f1cb86f",
       "src": "https://github.com/zbirenbaum/copilot.lua"
     },
     "diffview.nvim": {
@@ -41,11 +41,11 @@
       "src": "https://github.com/mhartington/formatter.nvim"
     },
     "fzf-lua": {
-      "rev": "5b88d6f0af7fcb41d4a8bb340bf70d7e3824ee9d",
+      "rev": "11357ee24a9f092b1db503237eb57e2a11e48434",
       "src": "https://github.com/ibhagwan/fzf-lua"
     },
     "gitsigns.nvim": {
-      "rev": "d4854fa9a94b5c8b37dd209fb4a19e98e764186f",
+      "rev": "4bcd99167c265f135886b282baad77afe06206b2",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "lspkind.nvim": {
@@ -53,7 +53,7 @@
       "src": "https://github.com/onsails/lspkind.nvim"
     },
     "mason-lspconfig.nvim": {
-      "rev": "a338f44149f5673882c32629697d67b0c0547aec",
+      "rev": "3a5cd6d562a01f6829a35ae761dc383264ea452b",
       "src": "https://github.com/mason-org/mason-lspconfig.nvim"
     },
     "mason.nvim": {
@@ -61,7 +61,7 @@
       "src": "https://github.com/mason-org/mason.nvim"
     },
     "neogit": {
-      "rev": "832a2db084ac25c2801fd73a3fab58f3c82ed2ec",
+      "rev": "697ad3ee86a73cf6b6758b838d7a7d76cf3b9f86",
       "src": "https://github.com/NeogitOrg/neogit"
     },
     "nvim-autopairs": {
@@ -69,7 +69,7 @@
       "src": "https://github.com/windwp/nvim-autopairs"
     },
     "nvim-cmp": {
-      "rev": "2ffe79f1f021def8dd1fcd81deb16f1bb0d989f3",
+      "rev": "e04302f1fefcb5653848346eb3723b39b82c549b",
       "src": "https://github.com/hrsh7th/nvim-cmp"
     },
     "nvim-dap": {
@@ -93,7 +93,7 @@
       "src": "https://github.com/theHamsta/nvim-dap-virtual-text"
     },
     "nvim-lspconfig": {
-      "rev": "77b7432d4770d23b277d37923e5a08a442d8bb07",
+      "rev": "cc404d425c7752f56b8eaa269107be44d888ea51",
       "src": "https://github.com/neovim/nvim-lspconfig"
     },
     "nvim-nio": {
@@ -101,7 +101,7 @@
       "src": "https://github.com/nvim-neotest/nvim-nio"
     },
     "nvim-treesitter": {
-      "rev": "a2f694478be07f89c2d03cc17858a8745a400c4b",
+      "rev": "610734c5d3e59761d5f79318d120633374537fa5",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },
