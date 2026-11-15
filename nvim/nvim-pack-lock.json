@@ -12,6 +12,10 @@
       "rev": "98d3c0fdeb983f0ef62fe3a49da440f6d2c045ce",
       "src": "https://github.com/skywind3000/asyncrun.vim"
     },
+    "claudecode.nvim": {
+      "rev": "e864d9ddcd886154b3b824a90ce802e151acf268",
+      "src": "https://github.com/coder/claudecode.nvim"
+    },
     "cmp-buffer": {
       "rev": "b74fab3656eea9de20a9b8116afa3cfc4ec09657",
       "src": "https://github.com/hrsh7th/cmp-buffer"

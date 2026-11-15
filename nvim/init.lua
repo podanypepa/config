@@ -123,6 +123,7 @@ vim.pack.add({
 	gh("hrsh7th/cmp-path"),
 	gh("L3MON4D3/LuaSnip"),
 	gh("zbirenbaum/copilot-cmp"),
+	gh("coder/claudecode.nvim"),
 	-- packadd az pri prvnim markdownu (plugin/ jinak stoji ~3 ms pri startu)
 	gh("MeanderingProgrammer/render-markdown.nvim"),
 	-- jen pro instalaci/aktualizaci parseru (up → nvim-ts-update.lua); za behu
@@ -897,6 +898,43 @@ vim.keymap.set("n", "<C-h>", function() navigate("h", "L") end)
 vim.keymap.set("n", "<C-l>", function() navigate("l", "R") end)
 vim.keymap.set("n", "<C-j>", function() navigate("j", "D") end)
 vim.keymap.set("n", "<C-k>", function() navigate("k", "U") end)
+
+-- Claude Code: bezi `claude` CLI (predplatne, ne API) v terminalu vpravo,
+-- plugin mu pres WebSocket posila vyber/soubory a zobrazuje diffy.
+lazy(function()
+	vim.cmd.packadd("claudecode.nvim")
+	require("claudecode").setup({
+		terminal = { provider = "native", split_side = "right", split_width_percentage = 0.35 },
+	})
+end)
+vim.keymap.set("n", "<leader>ac", "<cmd>ClaudeCode<CR>", { desc = "Toggle Claude" })
+vim.keymap.set("n", "<leader>af", "<cmd>ClaudeCodeFocus<CR>", { desc = "Focus Claude" })
+vim.keymap.set("n", "<leader>ar", "<cmd>ClaudeCode --resume<CR>", { desc = "Resume Claude" })
+vim.keymap.set("n", "<leader>aC", "<cmd>ClaudeCode --continue<CR>", { desc = "Continue Claude" })
+vim.keymap.set("n", "<leader>am", "<cmd>ClaudeCodeSelectModel<CR>", { desc = "Select Claude model" })
+vim.keymap.set("n", "<leader>ab", "<cmd>ClaudeCodeAdd %<CR>", { desc = "Add buffer to Claude" })
+vim.keymap.set("v", "<leader>as", "<cmd>ClaudeCodeSend<CR>", { desc = "Send selection to Claude" })
+vim.keymap.set("n", "<leader>aa", "<cmd>ClaudeCodeDiffAccept<CR>", { desc = "Accept Claude diff" })
+vim.keymap.set("n", "<leader>ad", "<cmd>ClaudeCodeDiffDeny<CR>", { desc = "Deny Claude diff" })
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "oil",
+	callback = function(args)
+		vim.keymap.set("n", "<leader>as", "<cmd>ClaudeCodeTreeAdd<CR>", { buffer = args.buf, desc = "Add file to Claude" })
+	end,
+})
+-- v Claude terminalu C-h/j/k/l opusti terminal mode a skace dal (i do tmux).
+-- Novy radek v promptu pak jen Shift+Enter nebo \ + Enter, ne C-j.
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "claudecode",
+	callback = function(args)
+		for key, tmux_dir in pairs({ h = "L", j = "D", k = "U", l = "R" }) do
+			vim.keymap.set("t", "<C-" .. key .. ">", function()
+				vim.cmd.stopinsert()
+				vim.schedule(function() navigate(key, tmux_dir) end)
+			end, { buffer = args.buf })
+		end
+	end,
+})
 
 -- Editing
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
