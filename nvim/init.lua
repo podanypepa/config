@@ -52,6 +52,11 @@ vim.api.nvim_set_hl(0, "Comment", { italic = true })
 vim.api.nvim_create_autocmd("TextYankPost", {
 	callback = function()
 		vim.hl.on_yank({ higroup = "YankHighlight", timeout = 400 })
+		-- yank (ne delete/change) do vychoziho registru -> zkopiruj i do systemove schranky
+		local ev = vim.v.event
+		if ev.operator == "y" and ev.regname == "" then
+			vim.fn.setreg("+", ev.regcontents, ev.regtype)
+		end
 	end,
 })
 
