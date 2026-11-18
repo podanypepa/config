@@ -129,6 +129,8 @@ vim.pack.add({
 	gh("L3MON4D3/LuaSnip"),
 	gh("zbirenbaum/copilot-cmp"),
 	gh("coder/claudecode.nvim"),
+	-- packadd az pri prvnim markdownu
+	gh("toppair/peek.nvim"),
 	-- jen pro instalaci/aktualizaci parseru (up → nvim-ts-update.lua); za behu
 	-- staci parsery a query v stdpath("data")/treesitter, viz ts_setup
 	{ src = gh("nvim-treesitter/nvim-treesitter"), version = "main" },
@@ -246,6 +248,48 @@ vim.api.nvim_create_autocmd("FileType", {
 		end
 		ts_setup()
 		vim.treesitter.start(ev.buf, ts_langs[vim.bo[ev.buf].filetype])
+	end,
+})
+
+-- peek: nahled markdownu v prohlizeci (vyzaduje deno).
+-- packadd + setup az pri prvnim <leader>mp. JS bundle se builduje pri
+-- aktualizaci (PackChanged nize), po cerstve instalaci pri prvnim pouziti.
+local peek_ready = false
+local function peek_setup()
+	if peek_ready then
+		return
+	end
+	peek_ready = true
+	vim.cmd.packadd("peek.nvim")
+	local dir = vim.fn.stdpath("data") .. "/site/pack/core/opt/peek.nvim"
+	if not vim.uv.fs_stat(dir .. "/public/main.bundle.js") then
+		vim.notify("peek.nvim: building…")
+		vim.system({ "deno", "task", "--quiet", "build:fast" }, { cwd = dir }):wait()
+	end
+	require("peek").setup({ theme = "dark", app = "browser" })
+end
+
+vim.api.nvim_create_autocmd("PackChanged", {
+	callback = function(ev)
+		local d = ev.data
+		if d.spec.name == "peek.nvim" and (d.kind == "install" or d.kind == "update") then
+			vim.system({ "deno", "task", "--quiet", "build:fast" }, { cwd = d.path })
+		end
+	end,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "markdown",
+	callback = function(ev)
+		vim.keymap.set("n", "<leader>mp", function()
+			peek_setup()
+			local peek = require("peek")
+			if peek.is_open() then
+				peek.close()
+			else
+				peek.open()
+			end
+		end, { buffer = ev.buf, desc = "Toggle markdown preview" })
 	end,
 })
 
