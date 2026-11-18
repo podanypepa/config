@@ -129,8 +129,6 @@ vim.pack.add({
 	gh("L3MON4D3/LuaSnip"),
 	gh("zbirenbaum/copilot-cmp"),
 	gh("coder/claudecode.nvim"),
-	-- packadd az pri prvnim markdownu (plugin/ jinak stoji ~3 ms pri startu)
-	gh("MeanderingProgrammer/render-markdown.nvim"),
 	-- jen pro instalaci/aktualizaci parseru (up → nvim-ts-update.lua); za behu
 	-- staci parsery a query v stdpath("data")/treesitter, viz ts_setup
 	{ src = gh("nvim-treesitter/nvim-treesitter"), version = "main" },
@@ -248,17 +246,6 @@ vim.api.nvim_create_autocmd("FileType", {
 		end
 		ts_setup()
 		vim.treesitter.start(ev.buf, ts_langs[vim.bo[ev.buf].filetype])
-	end,
-})
-
--- render-markdown: parsery markdown/markdown_inline ma nvim v sobe a jeho
--- ftplugin sam spousti treesitter. plugin/ pri packadd udela setup a pripoji
--- se i na aktualni buffer.
-vim.api.nvim_create_autocmd("FileType", {
-	pattern = "markdown",
-	once = true,
-	callback = function()
-		vim.cmd.packadd("render-markdown.nvim")
 	end,
 })
 
